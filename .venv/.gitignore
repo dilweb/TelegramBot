@@ -1,0 +1,45 @@
+# ── Python мусор ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Виртуалки
+.venv/
+venv/
+env/
+ENV/
+.venv*/
+env*/
+# Секреты
+.env
+.env.*
+# Логи и базы
+*.log
+*.sqlite3
+*.db
+
+# Сборка/артефакты
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.wheels/
+*.spec
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+.coverage*
+
+# ── PyCharm/JetBrains ───────────────────────────────────────
+.idea/
+*.iml
+# Если ОЧЕНЬ нужно шарить командный код-стайл/инспекции:
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/dictionaries/
+
+# ── ОС ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
