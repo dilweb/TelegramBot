@@ -1,30 +1,46 @@
 import requests
-from typing import List, Dict
+# from typing import List
 
-from config import API_BASE_URL, API_KEY
+from config import DICT_API_KEY, THE_API_KEY, DICT_BASE_URL, THE_BASE_URL
 
+def lookup(word: str):
+    # делаем базовую ссылку
+    url = f'{DICT_BASE_URL}{word.lower()}'
+    try:
+        r = requests.get(url, params={'key': DICT_API_KEY}, timeout=10)
+        r.raise_for_status() # проверяем статус если не 200 - ошибка
+    except requests.RequestException as e:
+        return {'error': f'network: {e}'}
 
-def api_request(endpoint: str, params: dict | None = None) -> requests.Response:
-    if params is None:
-        params = {}
+    # проверим пришел ли список/словарь, если нет выдаем красивую ошибку
+    try:
+        data = r.json()
+    except ValueError:
+        return {'error': 'bad-json'}
 
-    params['key'] = API_KEY
-    return requests.get(
-        f'{API_BASE_URL}/{endpoint}',
-        params=params
-    )
+    if not data:
+        return {"error": "no-results"}
 
+    # если список строк, то Merriam-Webster дал нам подсказки [str, str, str...] (юзер написал слово неправильно)
+    if all(isinstance(x, str) for x in data):
+        return {"suggestions": data[:5]}
 
-def get_langs() -> List[str]:
-    response = api_request('getLangs')
-    return response.json()
+    # ищем краткую статью: она должна быть диктом с ключом shortdef
+    entry = next((e for e in data if isinstance(e, dict) and e.get('shortdef')),  None)
+    if not entry:
+        return {"error": "no-definitions"}
 
+    hw = entry.get("hwi", {}).get("hw") or word
+    hw = hw.title()
+    pos = entry.get("fl") or ""
+    # если "prs" нет вернем список с одним пустым словарём [{}] иначе IndexError
+    pron = (entry.get("hwi", {}).get("prs", [{}])[0].get("mw"))
+    sdef = entry["shortdef"][0]
+    sdef = sdef[0].upper() + sdef[1:]
+    sdef = sdef.strip()
+    if sdef.endswith(": such as"):
+        sdef = sdef[:-9].strip() + "…"
 
-def lookup(lang: str, text: str, ui: str = 'ru') -> Dict:
-    response = api_request('lookup', params={
-        'lang': lang,
-        'text': text,
-        'ui': ui
-    })
+    return {"word": hw, "pos": pos, "pron": pron, "shortdef": sdef}
 
-    return response.json().get('def', {})
+# print(lookup('car'))

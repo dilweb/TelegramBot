@@ -6,10 +6,14 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 if BOT_TOKEN is None:
     exit('BOT_TOKEN отсутствует в переменных окружения')
 
-API_KEY = os.getenv('API_KEY')
-if API_KEY is None:
-    exit('BOT_TOKEN отсутствует в переменных окружения')
+DICT_API_KEY = os.getenv('DICT_API_KEY')
+if DICT_API_KEY is None:
+    exit('DICT_API_KEY отсутствует в переменных окружения')
 
-API_BASE_URL = 'https://dictionary.yandex.net/api/v1/dicservice.json'
+THE_API_KEY = os.getenv('THE_API_KEY')
+if THE_API_KEY is None:
+    exit('THE_API_KEY отсутствует в переменных окружения')
 
-DEFAULT_LANG = 'ru-en'
+DICT_BASE_URL = 'https://dictionaryapi.com/api/v3/references/collegiate/json/'
+THE_BASE_URL = 'https://dictionaryapi.com/api/v3/references/thesaurus/json/'
+
