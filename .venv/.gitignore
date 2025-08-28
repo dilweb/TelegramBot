@@ -2,6 +2,10 @@
 __pycache__/
 *.pyc
 .env
+.env.*
 *.db
 *.log
 .idea/
+*.iml
+.DS_Store
+Thumbs.db
