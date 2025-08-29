@@ -12,7 +12,7 @@ def definition(word: str):
     except requests.RequestException as e:
         return {'error': f'network: {e}'}
 
-    # проверим пришел ли список/словарь, если нет выдаем красивую ошибку
+    # проверим пришел ли список/словарь, если нет выдаем ошибку
     try:
         data = r.json()
     except ValueError:
@@ -35,13 +35,17 @@ def definition(word: str):
     pos = entry.get("fl") or ""
     # если "prs" нет вернем список с одним пустым словарём [{}] иначе IndexError
     pron = (entry.get("hwi", {}).get("prs", [{}])[0].get("mw"))
-    sdef = entry["shortdef"][0]
-    sdef = sdef[0].upper() + sdef[1:]
-    sdef = sdef.strip()
-    if sdef.endswith(": such as"):
-        sdef = sdef[:-9].strip() + "…"
+    sdef = entry["shortdef"][:3]
 
-    return {"word": hw, "pos": pos, "pron": pron, "shortdef": sdef}
+    # форматируем вхождения из списка определений и кладем в список
+    sdef_list = []
+    for defs in sdef:
+        defs = defs[0].upper() + defs[1:]
+        if defs.endswith(": such as"):
+            defs = defs[:-9].strip()
+        sdef_list.append(defs)
+
+    return {"word": hw, "pos": pos, "pron": pron, "shortdef": sdef_list}
 
 
 def thesaurus(word: str):
@@ -61,17 +65,35 @@ def thesaurus(word: str):
     if not data:
         return {"error": "no-results"}
 
-    if all(isinstance(x, str) for x in data):
-        return {"suggestions": data[:5]}
-
     syns_set, ants_set = set(), set()
-    pos = None
-    headword = None
 
     entry = next((e for e in data if isinstance(e, dict)), None)
     if not entry:
         return {"error": "no-synonyms"}
 
+    meta = entry.get("meta", {})
+    # syns: List[List[str]]
+    for group in meta.get("syns", []):
+        for w in group:
+            if w and w.lower() != word.lower():
+                syns_set.add(w)
+    # ants: List[List[str]]
+    for group in meta.get("ants", []):
+        for w in group:
+            if w and w.lower() != word.lower():
+                ants_set.add(w)
 
+    syns = list(syns_set)[:5]
+    ants = list(ants_set)[:5]
 
-# print(lookup('car'))
+    if not syns and not ants:
+        return {"error": "no-thesaurus-terms"}
+
+    if not ants:
+        ants = None
+
+    return {
+        "synonyms": syns,
+        "antonyms": ants
+    }
+# print(definition('cat'))
