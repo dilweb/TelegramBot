@@ -1,11 +1,28 @@
-.venv/
+# Python cache
 __pycache__/
 *.pyc
-.env
-.env.*
-*.db
-*.log
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+env/
+venv/
+
+# IDE configs (PyCharm / IntelliJ)
 .idea/
 *.iml
+
+# Local environment variables
+.env
+.env.*.local
+
+# SQLite database (локальная, не надо в гите)
+bot.sqlite3
+
+# Logs
+*.log
+
+# System files
 .DS_Store
 Thumbs.db
