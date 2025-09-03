@@ -1,18 +1,15 @@
 import requests
+from core.config import DICT_API_KEY, THE_API_KEY, DICT_BASE_URL, THE_BASE_URL
 
-from config import DICT_API_KEY, THE_API_KEY, DICT_BASE_URL, THE_BASE_URL
 
-
-def definition(word: str):
-    # делаем базовую ссылку
+def fetch_definition(word: str):
     url = f'{DICT_BASE_URL}{word.lower()}'
     try:
         r = requests.get(url, params={'key': DICT_API_KEY}, timeout=10)
-        r.raise_for_status() # проверяем статус если не 200 - ошибка
+        r.raise_for_status()
     except requests.RequestException as e:
         return {'error': f'network: {e}'}
 
-    # проверим пришел ли список/словарь, если нет выдаем ошибку
     try:
         data = r.json()
     except ValueError:
@@ -21,26 +18,20 @@ def definition(word: str):
     if not data:
         return {"error": "no-results"}
 
-    # если список строк, то Merriam-Webster дал нам подсказки [str, str, str...] (юзер написал слово неправильно)
     if all(isinstance(x, str) for x in data):
         return {"suggestions": data[:5]}
 
-    # ищем краткую статью: она должна быть диктом с ключом shortdef
-    entry = next((e for e in data if isinstance(e, dict) and e.get('shortdef')),  None)
+    entry = next((e for e in data if isinstance(e, dict) and e.get('shortdef')), None)
     if not entry:
         return {"error": "no-definitions"}
 
-    hw = entry.get("hwi", {}).get("hw") or word
-    hw = hw.title()
+    hw = (entry.get("hwi", {}).get("hw") or word).title()
     pos = entry.get("fl") or ""
-    # если "prs" нет вернем список с одним пустым словарём [{}] иначе IndexError
     pron = (entry.get("hwi", {}).get("prs", [{}])[0].get("mw"))
     sdef = entry["shortdef"][:3]
 
-    # форматируем вхождения из списка определений и кладем в список
     sdef_list = []
     for defs in sdef:
-        defs = defs[0].upper() + defs[1:]
         if defs.endswith(": such as"):
             defs = defs[:-9].strip()
         sdef_list.append(defs)
@@ -48,12 +39,11 @@ def definition(word: str):
     return {"word": hw, "pos": pos, "pron": pron, "shortdef": sdef_list}
 
 
-def thesaurus(word: str):
-    # делаем базовую ссылку
+def fetch_thesaurus(word: str):
     url = f'{THE_BASE_URL}{word.lower()}'
     try:
         r = requests.get(url, params={'key': THE_API_KEY}, timeout=10)
-        r.raise_for_status() # проверяем статус если не 200 - ошибка
+        r.raise_for_status()
     except requests.RequestException as e:
         return {'error': f'network: {e}'}
 
@@ -66,18 +56,15 @@ def thesaurus(word: str):
         return {"error": "no-results"}
 
     syns_set, ants_set = set(), set()
-
     entry = next((e for e in data if isinstance(e, dict)), None)
     if not entry:
         return {"error": "no-synonyms"}
 
     meta = entry.get("meta", {})
-    # syns: List[List[str]]
     for group in meta.get("syns", []):
         for w in group:
             if w and w.lower() != word.lower():
                 syns_set.add(w)
-    # ants: List[List[str]]
     for group in meta.get("ants", []):
         for w in group:
             if w and w.lower() != word.lower():
@@ -92,8 +79,8 @@ def thesaurus(word: str):
     if not ants:
         ants = None
 
-    return {
-        "synonyms": syns,
-        "antonyms": ants
-    }
-# print(definition('cat'))
+    return {"synonyms": syns, "antonyms": ants}
+
+
+
+# print(fetch_definition("car"))
