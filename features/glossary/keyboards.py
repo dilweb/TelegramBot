@@ -5,7 +5,7 @@ def kb_both(word: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup()
     # создаем объекты кнопки
     kb.add(InlineKeyboardButton(
-        text='Show synonyms or antonyms',
+        text='Show synonyms and antonyms',
         callback_data=f'syn_ant|{word}|gen')
     )
 

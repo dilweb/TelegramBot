@@ -5,44 +5,42 @@ from core.db import get_conn, now, normalize_key, maybe_cleanup
 
 
 logger = logging.getLogger(__name__)
-TABLE = 'glossary_cache'
 
 
-def get_word(word: str) -> Optional[Dict[str, Any]]:
+def get_sentence(word: str) -> Optional[Dict[str, Any]]:
     """Вернуть из БД payload или None"""
     key = normalize_key(word)
     # взять подключение, выполнить скл и вернуть курсор
-    cur = get_conn().execute(f'SELECT payload FROM {TABLE} WHERE word = ?', (key,))
-    row = cur.fetchone()
-    if not row:
-        logger.info("DB MISS for key='%s'", key)
+    cur = get_conn().execute('SELECT sentence FROM gemini_cache WHERE word = ?', (key,))
+    if not cur:
+        logger.info("DB grepo MISS for key='%s'", key)
         return None
     try:
-        payload = json.loads(row['payload'])
-        logger.info("DB HIT for key='%s'", key)
-        return payload
+        row = cur.fetchone()
+        logger.info("DB grepo HIT for key='%s'", key)
+        return row # отдаем результат, если повезет
+
     except Exception as e:
         logger.warning("DB row for key='%s' has bad JSON: %s", key, e)
         return None
 
 
-def save_word(word: str, payload: Dict[str, Any]) -> None:
+def save_sentence(word: str, sentence: str) -> None:
     """Сохранить/обновить JSON под ключом word"""
     key = normalize_key(word)
-    data = json.dumps(payload, ensure_ascii=False) # сериализуем
     get_conn().execute(
         """
-        INSERT INTO glossary_cache(word, payload, created_at)
+        INSERT INTO gemini_cache(word, sentence, created_at)
         VALUES(?, ?, ?)
         ON CONFLICT(word) DO UPDATE SET
-            payload = excluded.payload,
+            sentence = excluded.sentence,
             created_at = excluded.created_at
         """,
-        (key, data, now()),
+        (key, sentence, now()),
     )
     get_conn().commit()
     # достаем количество строк из таблицы для логов
-    cnt = get_conn().execute("SELECT COUNT(*) AS c FROM glossary_cache").fetchone()["c"]
+    cnt = get_conn().execute("SELECT COUNT(*) AS c FROM gemini_cache").fetchone()["c"]
     logger.info("Saved key='%s'. Total rows: %s", key, cnt)
     get_conn().commit()
     maybe_cleanup(ttl_days=30) # чистка если есть что чистить

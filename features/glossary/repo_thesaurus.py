@@ -11,11 +11,11 @@ def get_syn_ant(word: str) -> Optional[Dict[str, Any]]:
     cur = get_conn().execute(f'SELECT payload FROM {TABLE} WHERE word = ?', (key,))
     row = cur.fetchone()
     if not row:
-        logger.info('DB MISS(thesaurus_cache) for key="%s", key')
+        logger.info('DB MISS(thesaurus_cache) for key="%s"', key)
         return None
     try:
         payload = json.loads(row['payload'])
-        logger.info('DB HIT(thesaurus_cache) for key="%s", key')
+        logger.info('DB HIT(thesaurus_cache) for key="%s"', key)
         return payload
     except Exception as e:
         logger.info('bad JSON in thesaurus_cache for key="%s : %s"', key, e)

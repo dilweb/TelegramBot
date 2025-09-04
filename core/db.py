@@ -3,7 +3,10 @@ import time
 import logging
 from core.config import DB_PATH
 from typing import Optional
-
+def reset_gemini_cache():
+    conn = get_conn()
+    conn.execute("DROP TABLE IF EXISTS gemini_cache")
+    conn.commit()
 # чистим кэш каждые 30 дней
 _CLEANUP_PERIOD_SECONDS = 20 * 24 * 3600
 _last_cleanup_ts = 0 # время последней чистки
@@ -82,8 +85,21 @@ def init_db() -> None:
     CREATE INDEX IF NOT EXISTS idx_thesaurus_cache_created_at ON thesaurus_cache (created_at)
     """)
 
+    # кэш предложений
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS gemini_cache (
+        word TEXT PRIMARY KEY,
+        sentence TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+        )
+        """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_gemini_cache_created_at ON gemini_cache (created_at)
+        """)
+
     conn.commit()
-    logger.info('DB initialized, tables glossary_cache & thesaurus_cache are ready')
+    logger.info('DB initialized. Tables: glossary_cache, thesaurus_cache & gemini_cache are ready.')
 
 
 def fetchone_dict(cur: sqlite3.Cursor) -> Optional[dict]:

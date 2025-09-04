@@ -3,6 +3,7 @@ from telebot.types import Message, CallbackQuery
 import infra.dictionary_api as api
 from features.glossary import repo
 from features.glossary import repo_thesaurus as trepo
+from features.glossary import repo_gemini as grepo
 from features.glossary.keyboards import kb_both, kb_only_gen, kb_only_syn_ant
 from infra.llm_gemini import ask_gemini
 
@@ -85,7 +86,7 @@ def setup_handlers(bot):
             f"<u><b>{res['word']}</b> — {pos}</u>\n{pron}\n\n"
             f"Short definitions:\n<em>{formed_string}</em>",
             parse_mode="HTML",
-            reply_markup=kb_both(res['word'])
+            reply_markup=kb_both(message.text.strip().lower()),
         )
 
 
@@ -122,7 +123,9 @@ def setup_handlers(bot):
             res = api.fetch_thesaurus(word)
 
             if isinstance(res, dict) and 'error' in res:
-                bot.send_message(callback_query.message.chat.id, 'Sorry, can\'t find any.')
+                bot.send_message(
+                    callback_query.message.chat.id,
+                    'Sorry, can\'t find any.')
                 return
 
             try:
@@ -137,8 +140,10 @@ def setup_handlers(bot):
 
         if remain == 'gen':
             bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML", reply_markup=kb_only_gen(word))
-        else:
+        elif remain == 'none':
             bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML")
+        else:
+            bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML", reply_markup=kb_only_syn_ant(word))
 
 
     @bot.callback_query_handler(
@@ -163,20 +168,29 @@ def setup_handlers(bot):
         except Exception:
             pass  # если клавы уже нет то ок
 
+        cached = grepo.get_sentence(word)
+        if cached:
+            logger.info("Found cached sentence for: %s", word)
+            sentence = cached
+        else:
+            sentence = ask_gemini(word).strip()
+            try:
+                grepo.save_sentence(word, sentence)
+            except Exception as e:
+                logger.warning("Failed to save sentence '%s' to DB: %s", word, e)
+
         word = (word or "").strip()
         logger.info("Generating example sentence with word='%s' for user %s",
                     word, callback_query.from_user.id)
-        try:
-            sentence = ask_gemini(word).strip()
 
-            if not sentence:
-                sentence = f'Could not generate a sentence with "{word}". Try again later.'
 
-            if remain == 'syn':
-                bot.send_message(callback_query.message.chat.id, sentence, parse_mode="HTML", reply_markup=kb_only_syn_ant(word))
-            else:
-                bot.send_message(callback_query.message.chat.id, sentence)
+        if not sentence:
+            sentence = f'Could not generate a sentence with "{word}". Try again later.'
 
-        except Exception as e:
-            logger.exception('GEN callback failed for \'%s\': %s', callback_query.data, e)
-            bot.send_message(callback_query.message.chat.id, 'Failed to generate example. Please try again.')
+        if remain == 'syn':
+            bot.send_message(callback_query.message.chat.id, sentence, parse_mode="HTML", reply_markup=kb_only_syn_ant(word))
+        elif remain == 'none':
+            bot.send_message(callback_query.message.chat.id, sentence, parse_mode="HTML")
+        else:
+            bot.send_message(callback_query.message.chat.id, sentence, reply_markup=kb_only_gen(word))
+
