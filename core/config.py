@@ -19,6 +19,12 @@ DB_PATH = os.getenv('DB_PATH')
 if DB_PATH is None:
     exit('DB_PATH отсутствует в переменных окружения')
 
+GEMINI_API = os.getenv('GEMINI_API')
+if GEMINI_API is None:
+    exit('GEMINI_API отсутствует в переменных окружения')
+
 DICT_BASE_URL = 'https://dictionaryapi.com/api/v3/references/collegiate/json/'
 THE_BASE_URL = 'https://dictionaryapi.com/api/v3/references/thesaurus/json/'
+GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+
 
