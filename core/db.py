@@ -8,11 +8,11 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def reset_cache():
+def reset_cache(table):
     conn = get_conn()
-    conn.execute("DROP TABLE IF EXISTS gemini_cache") # уничтожаем таблицы если надо
+    conn.execute(f"DROP TABLE IF EXISTS {table}") # уничтожаем таблицы если надо
     conn.commit()
-    logger.info('Cache deleted')
+    logger.info("Cache deleted")
 
 
 # чистим кэш каждые 30 дней

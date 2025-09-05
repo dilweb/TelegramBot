@@ -15,25 +15,25 @@ def setup_handlers(bot):
     Передаем нашего бота
     """
 
-    @bot.message_handler(commands=['start'])
+    @bot.message_handler(commands=["start"])
     def start(message: Message) -> None:
         logger.info("Received /start from user %s", message.from_user.id)
         bot.send_message(
             message.chat.id,
-            'Hello! I\'m a bot powered by Merriam-Webster.\n'
-            'I can clarify the meaning of any English word.\n\n'
-            'To get started, type any word (or use /lookup for a hint).',
+            "Hello! I'm a bot powered by Merriam-Webster.\n"
+            "I can clarify the meaning of any English word.\n\n"
+            "To get started, type any word (or use /help for a hint).",
             parse_mode='HTML',
         )
 
 
-    @bot.message_handler(commands=['lookup'])
+    @bot.message_handler(commands=["help"])
     def lookup_cmd(message: Message) -> None:
         logger.info("Received /lookup from user %s", message.from_user.id)
-        bot.send_message(message.chat.id, 'Type a word to look it up.')
+        bot.send_message(message.chat.id, "Don't know what to do? Just type 'susurrus' for example.")
 
 
-    @bot.message_handler(content_types=['text'])
+    @bot.message_handler(content_types=["text"])
     def do_lookup(message: Message) -> None:
         logger.info("Received text '%s' from user %s", message.text, message.from_user.id)
         text = (message.text or '').strip()
@@ -68,7 +68,7 @@ def setup_handlers(bot):
         pos = res["pos"] or ""
         pron = res.get("pron") or ""
         if pron:
-            pron = f'🗣  [{pron}]'
+            pron = f"🗣  [{pron}]"
         else:
             pron = ""
 
@@ -77,13 +77,13 @@ def setup_handlers(bot):
         formed_string = ''
         for i, definition in enumerate(sdef):
             if i == len(sdef) - 1:
-                formed_string += f'● {definition}.'
+                formed_string += f"● {definition}."
             else:
-                formed_string += f'● {definition};\n'
+                formed_string += f"● {definition};\n"
 
         bot.reply_to(
             message,
-            f"<u><b>{res['word']}</b> — {pos}</u>\n{pron}\n\n"
+            f"<u><b>{res["word"]}</b> — {pos}</u>\n{pron}\n\n"
             f"Short definitions:\n<em>{formed_string}</em>",
             parse_mode="HTML",
             reply_markup=kb_both(message.text.strip().lower()),
@@ -91,7 +91,7 @@ def setup_handlers(bot):
 
 
     @bot.callback_query_handler(
-        func=lambda callback_query: (callback_query.data.startswith('syn_ant|'))
+        func=lambda callback_query: (callback_query.data.startswith("syn_ant|"))
         )
     def syn_ant_answer(callback_query: CallbackQuery) -> None:
 
@@ -102,7 +102,7 @@ def setup_handlers(bot):
             _, word, remain = callback_query.data.split("|", 2)
         except ValueError:
             parts = callback_query.data.split("|", 1)
-            word, remain = parts[1], 'gen'
+            word, remain = parts[1], "gen"
 
         # удаляем клавиатуру у исходного меседжа
         try:
@@ -122,11 +122,8 @@ def setup_handlers(bot):
         else:
             res = api.fetch_thesaurus(word)
 
-            if isinstance(res, dict) and 'error' in res:
-                bot.send_message(
-                    callback_query.message.chat.id,
-                    'Sorry, can\'t find any.')
-                return
+            if isinstance(res, dict) and "error" in res:
+                logger.warning("NO SYN ANT for word %s", word)
 
             try:
                 trepo.save_syn_ant(word, res)
@@ -138,16 +135,16 @@ def setup_handlers(bot):
         ants = ", ".join(res["antonyms"]) if res.get("antonyms") else "No antonyms available."
         text = f"<b>Synonyms</b>: {syns}\n<b>Antonyms</b>: {ants}"
 
-        if remain == 'gen':
+        if remain == "gen":
             bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML", reply_markup=kb_only_gen(word))
-        elif remain == 'none':
+        elif remain == "none":
             bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML")
         else:
             bot.send_message(callback_query.message.chat.id, text, parse_mode="HTML", reply_markup=kb_only_syn_ant(word))
 
 
     @bot.callback_query_handler(
-        func=lambda callback_query: (callback_query.data.startswith('gen_sent|'))
+        func=lambda callback_query: (callback_query.data.startswith("gen_sent|"))
     )
     def generate_sentence(callback_query: CallbackQuery) -> None:
         bot.answer_callback_query(callback_query.id)
@@ -156,7 +153,7 @@ def setup_handlers(bot):
             _, word, remain = callback_query.data.split("|", 2)
         except ValueError:
             parts = callback_query.data.split("|", 1)
-            word, remain = parts[1], 'syn'
+            word, remain = parts[1], "syn"
 
         # удаляем клавиатуру у исходного меседжа
         try:
@@ -185,11 +182,11 @@ def setup_handlers(bot):
 
 
         if not sentence:
-            sentence = f'Could not generate a sentence with "{word}". Try again later.'
+            sentence = f"Could not generate a sentence with '{word}'. Try again later."
 
-        if remain == 'syn':
+        if remain == "syn":
             bot.send_message(callback_query.message.chat.id, sentence, parse_mode="HTML", reply_markup=kb_only_syn_ant(word))
-        elif remain == 'none':
+        elif remain == "none":
             bot.send_message(callback_query.message.chat.id, sentence, parse_mode="HTML")
         else:
             bot.send_message(callback_query.message.chat.id, sentence, reply_markup=kb_only_gen(word))

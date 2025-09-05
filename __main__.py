@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 bot = telebot.TeleBot(BOT_TOKEN)
 
 def main():
-    # reset_cache()
+    # reset_cache("ai_cache")
     init_db()
 
     # разовая уборка на старте
@@ -23,13 +23,13 @@ def main():
     logger.info("Starting Telegram Bot...")
 
     bot.set_my_commands([
-        telebot.types.BotCommand("start", "To start"),
-        telebot.types.BotCommand("lookup", "How to use")
+        telebot.types.BotCommand("start", "To get started"),
+        telebot.types.BotCommand("help", "How to use")
     ])
 
     logger.info("Bot started. Waiting for updates...")
 
     bot.infinity_polling()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
