@@ -23,8 +23,12 @@ GEMINI_API = os.getenv('GEMINI_API')
 if GEMINI_API is None:
     exit('GEMINI_API отсутствует в переменных окружения')
 
+CHAT_API = os.getenv('CHAT_API')
+if CHAT_API is None:
+    exit('CHAT_API отсутствует в переменных окружения')
+
 DICT_BASE_URL = 'https://dictionaryapi.com/api/v3/references/collegiate/json/'
 THE_BASE_URL = 'https://dictionaryapi.com/api/v3/references/thesaurus/json/'
 GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
-
+CHAT_URL = 'https://api.openai.com/v1/chat/completions'
 

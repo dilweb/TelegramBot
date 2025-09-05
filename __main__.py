@@ -2,7 +2,7 @@ import telebot
 import logging
 from core.config import BOT_TOKEN
 from core.logger import setup_logging
-from core.db import init_db, clear_old_cache, reset_gemini_cache
+from core.db import init_db, clear_old_cache, reset_cache
 from features.glossary.router import register_glossary_handlers
 
 setup_logging()   # включаем логи
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 bot = telebot.TeleBot(BOT_TOKEN)
 
 def main():
-    # reset_gemini_cache()
+    # reset_cache()
     init_db()
 
     # разовая уборка на старте

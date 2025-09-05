@@ -3,9 +3,9 @@ from telebot.types import Message, CallbackQuery
 import infra.dictionary_api as api
 from features.glossary import repo
 from features.glossary import repo_thesaurus as trepo
-from features.glossary import repo_gemini as grepo
+from features.glossary import repo_ai as grepo
 from features.glossary.keyboards import kb_both, kb_only_gen, kb_only_syn_ant
-from infra.llm_gemini import ask_gemini
+from infra.llm_chatgpt import ask_gpt
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ def setup_handlers(bot):
             logger.info("Found cached sentence for: %s", word)
             sentence = cached
         else:
-            sentence = ask_gemini(word).strip()
+            sentence = ask_gpt(word).strip()
             try:
                 grepo.save_sentence(word, sentence)
             except Exception as e:
