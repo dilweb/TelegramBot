@@ -19,4 +19,4 @@ def ask_gpt(word):
     response = requests.post(CHAT_URL, headers=headers, json=data).json()
     return response["choices"][0]["message"]["content"].strip('"')
 
-# print(ask_gpt('murderer'))
+# print(ask_gpt('hell'))

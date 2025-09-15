@@ -83,7 +83,7 @@ def setup_handlers(bot):
 
         bot.reply_to(
             message,
-            f"<u><b>{res["word"]}</b> — {pos}</u>\n{pron}\n\n"
+            f"<u><b>{res['word']}</b> — {pos}</u>\n{pron}\n\n"
             f"Short definitions:\n<em>{formed_string}</em>",
             parse_mode="HTML",
             reply_markup=kb_both(message.text.strip().lower()),

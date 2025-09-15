@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    image: dictbot
+    container_name: dictbot
+    restart: always
+    env_file: .env
+    volumes:
+      - ./data:/app/data
