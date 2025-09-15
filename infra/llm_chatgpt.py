@@ -4,7 +4,7 @@ from core.config import CHAT_API, CHAT_URL
 def ask_gpt(word):
     instruction = ("You are an ESL example-sentence generator. "
         "Return ONE neutral, non-violent, non-actionable sentence (5–15 words) "
-        "that includes the target word exactly once. "
+        "that includes the target word exactly once without changing it. "
         "Use lawful, fictional, news, or academic context. No quotes. No extra text.")
 
 
